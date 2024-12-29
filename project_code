@@ -1,0 +1,69 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+
+# Step 1: Load the data (example CSV file)
+# Assume the dataset contains columns like 'workload', 'stress_level', 'work_life_balance', 'burnout_risk'
+df = pd.read_csv('employee_burnout_data.csv')
+
+# Step 2: Data Preprocessing
+# Handle missing values (drop or fill)
+df.dropna(inplace=True)  # or use df.fillna(method='ffill')
+
+# Convert categorical columns (if any) to numeric values
+# Example: if there is a 'job_satisfaction' column with values like "Low", "Medium", "High"
+df['job_satisfaction'] = df['job_satisfaction'].map({'Low': 0, 'Medium': 1, 'High': 2})
+
+# Step 3: Exploratory Data Analysis (EDA)
+# Visualize relationships and distributions
+sns.pairplot(df)
+plt.show()
+
+# Correlation heatmap
+plt.figure(figsize=(10, 7))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.show()
+
+# Step 4: Prepare the data for training
+# Define features (X) and target (y)
+X = df.drop('burnout_risk', axis=1)  # drop the target variable 'burnout_risk'
+y = df['burnout_risk']  # 'burnout_risk' is the target variable
+
+# Split the dataset into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Standardize the data (optional, but useful for some algorithms)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Step 5: Build a Machine Learning Model (Random Forest Classifier)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Step 6: Model Evaluation
+y_pred = model.predict(X_test)
+
+# Classification Report
+print("Classification Report:")
+print(classification_report(y_test, y_pred))
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
+plt.title("Confusion Matrix")
+plt.show()
+
+# Feature Importance (optional, to see which factors contribute most to burnout risk)
+feature_importances = model.feature_importances_
+features = X.columns
+importance_df = pd.DataFrame({'Feature': features, 'Importance': feature_importances})
+importance_df = importance_df.sort_values(by='Importance', ascending=False)
+
+print("Feature Importances:")
+print(importance_df)
